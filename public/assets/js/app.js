@@ -358,12 +358,12 @@ const App = {
         </template>
         <template #end>
           <div style="display:flex; align-items:center; gap:8px">
-            <label>
-              <p-button icon="pi pi-upload" label="Upload" severity="secondary" size="small" outlined @click="triggerUpload" />
-              <input ref="fileInput" type="file" accept=".md,.markdown,.txt" @change="onFileUpload" style="display:none">
-            </label>
-            <p-splitbutton label="Download" icon="pi pi-download" severity="secondary" size="small" outlined @click="onDownloadMd" :model="downloadMenuItems" />
-            <p-button icon="pi pi-file-pdf" label="Export PDF" size="small" @click="onDownloadPdf" />
+            <input ref="fileInput" type="file" accept=".md,.markdown,.txt" @change="onFileUpload" style="display:none">
+            <span v-if="exportStatus" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#64748b">
+              <i class="pi pi-spin pi-spinner" style="font-size:12px"></i>
+              {{ exportStatus }}
+            </span>
+            <p-splitbutton label="Export PDF" icon="pi pi-file-pdf" size="small" @click="onDownloadPdf" :model="exportMenuItems" />
             <div style="width:1px; height:24px; background:#e2e8f0; margin:0 4px"></div>
             <p-selectbutton
               :modelValue="mode"
@@ -540,6 +540,7 @@ const App = {
     const isSignedIn = ref(false);
     const userProfile = ref(null);
     const syncStatus = ref('idle');
+    const exportStatus = ref(''); // '', 'Exporting...', 'Exporting 3/10...', 'Downloading...', 'Uploading...'
 
     const modeOptions = [
       { label: 'Edit', value: 'edit' },
@@ -551,8 +552,12 @@ const App = {
       value: key,
     }));
 
-    const downloadMenuItems = [
-      { label: 'Download All', icon: 'pi pi-file-export', command: () => onDownloadAll() },
+    const exportMenuItems = [
+      { label: 'Export All as ZIP', icon: 'pi pi-file-pdf', command: () => onExportAllPdf() },
+      { separator: true },
+      { label: 'Upload Markdown', icon: 'pi pi-upload', command: () => triggerUpload() },
+      { label: 'Download Markdown', icon: 'pi pi-download', command: () => onDownloadMd() },
+      { label: 'Download All Markdown', icon: 'pi pi-file-export', command: () => onDownloadAll() },
     ];
 
     const deleteMenuItems = [
@@ -895,6 +900,48 @@ const App = {
       }
     }
 
+    async function onExportAllPdf() {
+      const total = documents.value.length;
+      try {
+        exportStatus.value = 'Exporting...';
+        const zip = new JSZip();
+        const usedNames = {};
+        let done = 0;
+        for (const doc of documents.value) {
+          const md = loadDocument(doc.id);
+          if (!md) continue;
+          const parsed = MdParser.parse(md);
+          const svg = await extractSvgFromLogo(parsed.logo);
+          exportStatus.value = `Exporting ${++done}/${total}...`;
+          const blob = await PdfGenerator.getBlob({
+            title: parsed.title,
+            logoSvg: svg,
+            versions: parsed.versions || [],
+            pdfStyles: parsed.pdfStyles || {},
+            markdown: parsed.body,
+            pageSize: parsed.pageSize || 'Legal',
+          });
+          let baseName = (parsed.title || 'policy').replace(/[^a-zA-Z0-9\-_ ]/g, '').trim() || 'policy';
+          if (usedNames[baseName]) {
+            usedNames[baseName]++;
+            baseName += ' (' + usedNames[baseName] + ')';
+          } else {
+            usedNames[baseName] = 1;
+          }
+          zip.file(baseName + '.pdf', blob);
+        }
+        exportStatus.value = 'Zipping...';
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        downloadFile('all-policies.zip', zipBlob, 'application/zip');
+        toast.add({ severity: 'success', summary: 'Export Complete', detail: `${total} PDFs exported as ZIP`, life: 3000 });
+      } catch (e) {
+        console.error('Export All PDF error:', e);
+        toast.add({ severity: 'error', summary: 'Export Failed', detail: e.message || 'Unknown error', life: 5000 });
+      } finally {
+        exportStatus.value = '';
+      }
+    }
+
     function addVersion() {
       const today = new Date().toISOString().split('T')[0];
       let nextVersion = '1.0';
@@ -1035,12 +1082,12 @@ const App = {
     return {
       mode, title, logo, logoSvg, logoPreviewHtml, versions, pdfStyles, markdownBody,
       pageSize, created, updated, currentDocId, documents, fileInput, logoInput,
-      guideVisible, guideHtml, isSignedIn, userProfile, syncStatus,
-      modeOptions, pageSizeOptions, docOptions, downloadMenuItems, deleteMenuItems,
+      guideVisible, guideHtml, isSignedIn, userProfile, syncStatus, exportStatus,
+      modeOptions, pageSizeOptions, docOptions, exportMenuItems, deleteMenuItems,
       formatTimestamp,
       selectDocument, createDocument, confirmDeleteDoc, confirmDeleteAll, deleteDocument, deleteAllDocuments,
       triggerUpload, triggerLogoUpload, onFileUpload, onLogoUpload,
-      onDownloadMd, onDownloadAll, onDownloadPdf,
+      onDownloadMd, onDownloadAll, onDownloadPdf, onExportAllPdf,
       addVersion, removeVersion, emitVersions,
       applyColorsToAllDocs, applyLogoToAllDocs, showGuide,
       handleSignIn, handleSignOut,
