@@ -32,7 +32,10 @@ window.DriveSync = (() => {
     const headers = await authHeaders();
     const url = `${DRIVE_FILES}?spaces=appDataFolder&q=name='${DATA_FILENAME}'&fields=files(id,modifiedTime)`;
     const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error(`Drive list failed: ${res.status}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Drive list failed: ${res.status} ${body}`);
+    }
     const data = await res.json();
     if (data.files && data.files.length > 0) {
       driveFileId = data.files[0].id;
