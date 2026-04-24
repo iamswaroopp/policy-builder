@@ -28,14 +28,13 @@ window.PdfGenerator = (() => {
   }
 
   // ── Decode HTML entities that marked.lexer() produces ────
+  // Uses a shared textarea element to handle all entities: named (&amp; &ndash; &copy;),
+  // decimal (&#123;), and hex (&#x2F;)
+  const _decodeEl = document.createElement('textarea');
   function decodeEntities(str) {
-    if (!str || typeof str !== 'string') return str;
-    return str
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
+    if (!str || typeof str !== 'string' || !str.includes('&')) return str;
+    _decodeEl.innerHTML = str;
+    return _decodeEl.value;
   }
 
   // ── Inline token processing ──────────────────────────────
