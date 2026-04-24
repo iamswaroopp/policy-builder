@@ -1,10 +1,12 @@
 /**
  * GoogleAuth — Google Identity Services wrapper for OAuth 2.0 implicit flow
  * No backend required. Client ID is safe to expose (origin-restricted).
+ * Persists sign-in across page loads using a localStorage flag + silent token refresh.
  */
 window.GoogleAuth = (() => {
   const CLIENT_ID = '408005498550-lbkpehtnh2it40q03m2b25ak72qtifvd.apps.googleusercontent.com';
-  const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+  const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
+  const SIGNED_IN_KEY = 'policy-builder-signed-in';
 
   let tokenClient = null;
   let accessToken = null;
@@ -21,6 +23,11 @@ window.GoogleAuth = (() => {
       scope: SCOPES,
       callback: handleTokenResponse,
     });
+
+    // Auto-restore session if user was previously signed in
+    if (localStorage.getItem(SIGNED_IN_KEY) === 'true') {
+      trysilentSignIn();
+    }
   }
 
   function signIn() {
@@ -35,16 +42,38 @@ window.GoogleAuth = (() => {
     accessToken = null;
     tokenExpiry = 0;
     userProfile = null;
+    localStorage.removeItem(SIGNED_IN_KEY);
     if (onAuthChangeCallback) onAuthChangeCallback(false);
+  }
+
+  async function trysilentSignIn() {
+    try {
+      await refreshToken();
+      // Token obtained — fetch profile
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        const info = await res.json();
+        userProfile = { name: info.name, picture: info.picture };
+      }
+      if (onAuthChangeCallback) onAuthChangeCallback(true);
+    } catch {
+      // Silent refresh failed — user signed out of Google or revoked access
+      localStorage.removeItem(SIGNED_IN_KEY);
+      if (onAuthChangeCallback) onAuthChangeCallback(false);
+    }
   }
 
   async function handleTokenResponse(response) {
     if (response.error) {
       console.error('Auth error:', response.error);
+      localStorage.removeItem(SIGNED_IN_KEY);
       return;
     }
     accessToken = response.access_token;
     tokenExpiry = Date.now() + (response.expires_in * 1000);
+    localStorage.setItem(SIGNED_IN_KEY, 'true');
 
     try {
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -52,7 +81,7 @@ window.GoogleAuth = (() => {
       });
       if (res.ok) {
         const info = await res.json();
-        userProfile = { email: info.email, name: info.name, picture: info.picture };
+        userProfile = { name: info.name, picture: info.picture };
       }
     } catch (e) {
       console.warn('Failed to fetch user profile:', e);
