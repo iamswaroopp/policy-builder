@@ -27,6 +27,17 @@ window.PdfGenerator = (() => {
     return svgString;
   }
 
+  // ── Decode HTML entities that marked.lexer() produces ────
+  function decodeEntities(str) {
+    if (!str || typeof str !== 'string') return str;
+    return str
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+
   // ── Inline token processing ──────────────────────────────
   function processInlineTokens(tokens) {
     if (!tokens || tokens.length === 0) return [];
@@ -34,7 +45,7 @@ window.PdfGenerator = (() => {
     for (const token of tokens) {
       switch (token.type) {
         case 'text':
-          result.push({ text: token.text });
+          result.push({ text: decodeEntities(token.text) });
           break;
         case 'strong':
           result.push({ text: processInlineTokens(token.tokens), bold: true });
@@ -43,7 +54,7 @@ window.PdfGenerator = (() => {
           result.push({ text: processInlineTokens(token.tokens), italics: true });
           break;
         case 'codespan':
-          result.push({ text: token.text, font: 'Courier', fontSize: 10, background: '#f0f0f0', color: '#c7254e' });
+          result.push({ text: decodeEntities(token.text), font: 'Courier', fontSize: 10, background: '#f0f0f0', color: '#c7254e' });
           break;
         case 'link':
           result.push({ text: processInlineTokens(token.tokens), link: token.href, color: '#1565C0', decoration: 'underline' });
@@ -55,14 +66,14 @@ window.PdfGenerator = (() => {
           result.push({ text: '\n' });
           break;
         case 'escape':
-          result.push({ text: token.text });
+          result.push({ text: decodeEntities(token.text) });
           break;
         case 'image':
-          result.push({ text: `[Image: ${token.text || token.href}]`, italics: true, color: '#999999' });
+          result.push({ text: `[Image: ${decodeEntities(token.text) || token.href}]`, italics: true, color: '#999999' });
           break;
         default:
-          if (token.text) result.push({ text: token.text });
-          else if (token.raw) result.push({ text: token.raw });
+          if (token.text) result.push({ text: decodeEntities(token.text) });
+          else if (token.raw) result.push({ text: decodeEntities(token.raw) });
           break;
       }
     }
@@ -174,7 +185,7 @@ window.PdfGenerator = (() => {
             table: {
               widths: ['*'],
               body: [[{
-                text: token.text,
+                text: decodeEntities(token.text),
                 font: 'Courier',
                 fontSize: 10,
                 color: '#333333',
