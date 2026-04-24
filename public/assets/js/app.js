@@ -332,16 +332,7 @@ const App = {
         <template #start>
           <div style="display:flex; align-items:center; gap:12px">
             <div style="display:flex; align-items:center; gap:8px">
-              <div style="width:28px; height:28px; border-radius:8px; background:#0f172a; display:flex; align-items:center; justify-content:center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" style="display:block">
-                  <path d="M9 4h9l6 6v17a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#f1f5f9"/>
-                  <path d="M18 4l6 6h-4.5a1.5 1.5 0 0 1-1.5-1.5V4z" fill="#94a3b8"/>
-                  <rect x="11" y="13" width="7" height="1.5" rx=".75" fill="#2563eb"/>
-                  <rect x="11" y="17" width="10" height="1" rx=".5" fill="#cbd5e1"/>
-                  <rect x="11" y="20" width="8" height="1" rx=".5" fill="#cbd5e1"/>
-                  <rect x="11" y="23" width="6" height="1" rx=".5" fill="#cbd5e1"/>
-                </svg>
-              </div>
+              <img src="favicon.svg" alt="P" style="width:28px; height:28px; border-radius:8px" />
               <span style="font-size:14px; font-weight:600; color:#334155">Policy Builder</span>
             </div>
             <div style="width:1px; height:24px; background:#e2e8f0"></div>
