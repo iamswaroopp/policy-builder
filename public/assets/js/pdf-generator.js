@@ -244,7 +244,7 @@ window.PdfGenerator = (() => {
     const tokens = marked.lexer(markdown || '');
     const contentNodes = tokensToContent(tokens, contentWidth);
 
-    const latestVersion = versions.length > 0 ? versions[versions.length - 1] : null;
+    const latestVersion = versions.length > 0 ? versions[0] : null;
     const versionStr = latestVersion ? latestVersion.version : '';
     const svg = ensureSvgViewBox(logoSvg || DEFAULT_LOGO_SVG);
     const docTitle = title || 'Policy Name';
@@ -296,7 +296,7 @@ window.PdfGenerator = (() => {
           { text: 'Updated By', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
         ],
       ];
-      for (const v of [...versions].reverse()) {
+      for (const v of versions) {
         vhBody.push([
           { text: v.version || '', color: styles.body.color, margin: [6, 6, 6, 6] },
           { text: v.date || '', color: styles.body.color, margin: [6, 6, 6, 6] },

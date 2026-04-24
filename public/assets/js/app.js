@@ -452,24 +452,24 @@ const App = {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(v, i) in reversedVersions" :key="v._origIndex" style="border-bottom:1px solid var(--p-surface-100)">
+                    <tr v-for="(v, i) in versions" :key="i" style="border-bottom:1px solid var(--p-surface-100)">
                       <td style="padding:4px 8px">
-                        <input :value="v.version" @input="e => { versions[v._origIndex].version = e.target.value; emitVersions() }" placeholder="1.0"
+                        <input v-model="v.version" @input="emitVersions" placeholder="1.0"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px 8px">
-                        <input :value="v.date" @input="e => { versions[v._origIndex].date = e.target.value; emitVersions() }" placeholder="YYYY-MM-DD" type="date"
+                        <input v-model="v.date" @input="emitVersions" placeholder="YYYY-MM-DD" type="date"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px 8px">
-                        <input :value="v.updatedBy" @input="e => { versions[v._origIndex].updatedBy = e.target.value; emitVersions() }" placeholder="Name"
+                        <input v-model="v.updatedBy" @input="emitVersions" placeholder="Name"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px; text-align:center">
-                        <p-button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeVersion(v._origIndex)" />
+                        <p-button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeVersion(i)" />
                       </td>
                     </tr>
                   </tbody>
@@ -561,9 +561,6 @@ const App = {
       })).sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
     );
 
-    const reversedVersions = computed(() =>
-      versions.value.map((v, i) => ({ ...v, _origIndex: i })).reverse()
-    );
 
     const logoPreviewHtml = computed(() => {
       if (!logoSvg.value) return '';
@@ -644,19 +641,19 @@ const App = {
 
     function autoAddVersionIfNeeded() {
       const today = new Date().toISOString().split('T')[0];
-      const last = versions.value.length > 0 ? versions.value[versions.value.length - 1] : null;
-      if (!last || last.date !== today) {
+      const latest = versions.value.length > 0 ? versions.value[0] : null;
+      if (!latest || latest.date !== today) {
         let nextVersion = '1.0';
-        if (last && last.version) {
-          const match = last.version.trim().match(/(\d+)$/);
+        if (latest && latest.version) {
+          const match = latest.version.trim().match(/(\d+)$/);
           if (match) {
             const num = parseInt(match[1]) + 1;
-            nextVersion = last.version.trim().slice(0, match.index) + num;
+            nextVersion = latest.version.trim().slice(0, match.index) + num;
           } else {
-            nextVersion = last.version.trim() + '.1';
+            nextVersion = latest.version.trim() + '.1';
           }
         }
-        versions.value.push({ version: nextVersion, date: today, updatedBy: last ? last.updatedBy : '' });
+        versions.value.unshift({ version: nextVersion, date: today, updatedBy: latest ? latest.updatedBy : '' });
       }
     }
 
@@ -816,21 +813,19 @@ const App = {
       const today = new Date().toISOString().split('T')[0];
       let nextVersion = '1.0';
       if (versions.value.length > 0) {
-        const last = (versions.value[versions.value.length - 1].version || '').trim();
-        if (last) {
-          // Find trailing number: "v2" → 2, "1.3" → 3, "rev-5" → 5, "abc" → none
-          const match = last.match(/(\d+)$/);
+        const latest = (versions.value[0].version || '').trim();
+        if (latest) {
+          const match = latest.match(/(\d+)$/);
           if (match) {
             const num = parseInt(match[1]) + 1;
-            nextVersion = last.slice(0, match.index) + num;
+            nextVersion = latest.slice(0, match.index) + num;
           } else {
-            // No trailing number — append .1
-            nextVersion = last + '.1';
+            nextVersion = latest + '.1';
           }
         }
       }
-      const lastUpdatedBy = versions.value.length > 0 ? (versions.value[versions.value.length - 1].updatedBy || '') : '';
-      versions.value.push({ version: nextVersion, date: today, updatedBy: lastUpdatedBy });
+      const latestUpdatedBy = versions.value.length > 0 ? (versions.value[0].updatedBy || '') : '';
+      versions.value.unshift({ version: nextVersion, date: today, updatedBy: latestUpdatedBy });
     }
 
     function removeVersion(index) {
@@ -906,7 +901,7 @@ const App = {
       mode, title, logo, logoSvg, logoPreviewHtml, versions, pdfStyles, markdownBody,
       pageSize, created, updated, currentDocId, documents, fileInput, logoInput,
       guideVisible, guideHtml,
-      modeOptions, pageSizeOptions, docOptions, reversedVersions, downloadMenuItems,
+      modeOptions, pageSizeOptions, docOptions, downloadMenuItems,
       formatTimestamp,
       selectDocument, createDocument, confirmDeleteDoc, deleteDocument,
       triggerUpload, triggerLogoUpload, onFileUpload, onLogoUpload,
