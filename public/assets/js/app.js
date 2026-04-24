@@ -558,7 +558,7 @@ const App = {
         id: d.id,
         title: d.title || 'Untitled',
         lastModified: d.lastModified || '',
-      })).sort((a, b) => (b.lastModified || '').localeCompare(a.lastModified || ''))
+      })).sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
     );
 
     const reversedVersions = computed(() =>
