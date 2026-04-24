@@ -380,7 +380,7 @@ const App = {
               <i v-if="syncStatus === 'syncing'" class="pi pi-spin pi-spinner" style="font-size:14px; color:#64748b" title="Syncing..."></i>
               <i v-else-if="syncStatus === 'synced'" class="pi pi-cloud" style="font-size:14px; color:#22c55e" title="Synced to Drive"></i>
               <i v-else-if="syncStatus === 'error'" class="pi pi-exclamation-triangle" style="font-size:14px; color:#ef4444" title="Sync error"></i>
-              <span style="font-size:12px; color:#64748b">{{ userProfile?.email || userProfile?.name }}</span>
+              <p-avatar :label="(userProfile?.name || userProfile?.email || '?')[0].toUpperCase()" shape="circle" :title="userProfile?.email || userProfile?.name" style="width:28px; height:28px; font-size:13px" />
               <p-button icon="pi pi-sign-out" severity="secondary" size="small" text @click="handleSignOut" title="Sign out" />
             </div>
           </div>
