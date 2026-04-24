@@ -1,5 +1,12 @@
 /* Policy Builder — App Styles */
 
+/* ─── Dropdown text truncation ────────────────────────── */
+.p-select-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ─── Auth Avatar ─────────────────────────────────────── */
 .auth-avatar {
   width: 28px;

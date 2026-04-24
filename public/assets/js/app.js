@@ -345,7 +345,7 @@ const App = {
               optionLabel="title"
               optionValue="id"
               placeholder="Select document..."
-              style="min-width:220px"
+              style="min-width:220px; max-width:300px"
             >
               <template #option="{ option }">
                 <div style="line-height:1.3">
