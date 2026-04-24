@@ -266,10 +266,10 @@ window.PdfGenerator = (() => {
 
     // ─ TOC ────────────────────────────────────────────────
     const tocContent = [
-      { text: 'Table of Contents', fontSize: parseInt(styles.h2.size), bold: true, color: styles.h2.color, margin: [0, 0, 0, 16] },
+      { text: 'Table of Contents', fontSize: parseInt(styles.h2.size, 10), bold: true, color: styles.h2.color, margin: [0, 0, 0, 16] },
       {
         toc: {
-          numberStyle: { fontSize: parseInt(styles.body.size), color: styles.body.color },
+          numberStyle: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color },
           textStyle: { color: styles.body.color },
         },
       },
@@ -294,7 +294,7 @@ window.PdfGenerator = (() => {
         ]);
       }
       vhContent.push(
-        { text: 'Version History', fontSize: parseInt(styles.h2.size), bold: true, color: styles.h2.color, pageBreak: 'before', margin: [0, 0, 0, 12] },
+        { text: 'Version History', fontSize: parseInt(styles.h2.size, 10), bold: true, color: styles.h2.color, pageBreak: 'before', margin: [0, 0, 0, 12] },
         {
           table: { headerRows: 1, widths: ['auto', 'auto', '*'], body: vhBody },
           layout: {
@@ -360,17 +360,17 @@ window.PdfGenerator = (() => {
       ],
 
       styles: {
-        h1: { fontSize: parseInt(styles.h1.size), bold: true, color: styles.h1.color, margin: [0, 24, 0, 8] },
-        h2: { fontSize: parseInt(styles.h2.size), bold: true, color: styles.h2.color, margin: [0, 20, 0, 6] },
-        h3: { fontSize: parseInt(styles.h3.size), bold: true, color: styles.h3.color, margin: [0, 16, 0, 6] },
-        h4: { fontSize: parseInt(styles.h4.size), bold: true, color: styles.h4.color, margin: [0, 14, 0, 4] },
-        h5: { fontSize: parseInt(styles.h5.size), bold: true, color: styles.h5.color, margin: [0, 12, 0, 4] },
-        body: { fontSize: parseInt(styles.body.size), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3] },
+        h1: { fontSize: parseInt(styles.h1.size, 10), bold: true, color: styles.h1.color, margin: [0, 24, 0, 8] },
+        h2: { fontSize: parseInt(styles.h2.size, 10), bold: true, color: styles.h2.color, margin: [0, 20, 0, 6] },
+        h3: { fontSize: parseInt(styles.h3.size, 10), bold: true, color: styles.h3.color, margin: [0, 16, 0, 6] },
+        h4: { fontSize: parseInt(styles.h4.size, 10), bold: true, color: styles.h4.color, margin: [0, 14, 0, 4] },
+        h5: { fontSize: parseInt(styles.h5.size, 10), bold: true, color: styles.h5.color, margin: [0, 12, 0, 4] },
+        body: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3] },
       },
 
       defaultStyle: {
         font: 'Roboto',
-        fontSize: parseInt(styles.body.size) || 12,
+        fontSize: parseInt(styles.body.size, 10) || 12,
         color: styles.body.color || '#333333',
         lineHeight: 1.5,
       },

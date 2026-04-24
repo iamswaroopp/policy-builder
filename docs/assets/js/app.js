@@ -15,7 +15,7 @@ function loadIndex() {
 }
 
 function saveIndex(index) {
-  localStorage.setItem(STORAGE_INDEX_KEY, JSON.stringify(index));
+  localStorage.setItem(STORAGE_INDEX_KEY, JSON.stringify(index)); // may throw QuotaExceededError
 }
 
 function loadDocument(id) {
@@ -31,33 +31,57 @@ function removeDocument(id) {
 }
 
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return crypto.randomUUID();
 }
 
 // ─── Debounce utility ───────────────────────────────────────
 function debounce(fn, ms) {
   let timer;
-  return (...args) => {
+  const debounced = (...args) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), ms);
   };
+  debounced.cancel = () => clearTimeout(timer);
+  return debounced;
+}
+
+// ─── SVG sanitization (strip scripts, event handlers, foreignObject) ──
+function sanitizeSvg(svgString) {
+  if (!svgString) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  if (!svg) return '';
+  svg.querySelectorAll('script, foreignObject').forEach(el => el.remove());
+  for (const el of svg.querySelectorAll('*')) {
+    for (const attr of [...el.attributes]) {
+      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+    }
+  }
+  for (const attr of [...svg.attributes]) {
+    if (attr.name.startsWith('on')) svg.removeAttribute(attr.name);
+  }
+  return svg.outerHTML;
 }
 
 // ─── SVG extraction from logo value ─────────────────────────
 async function extractSvgFromLogo(logoValue) {
   if (!logoValue) return '';
   if (logoValue.startsWith('data:image/svg+xml;base64,')) {
-    try { return atob(logoValue.split(',')[1]); } catch { return ''; }
+    try { return sanitizeSvg(atob(logoValue.split(',')[1])); } catch { return ''; }
   }
   if (logoValue.startsWith('data:image/svg+xml,')) {
-    try { return decodeURIComponent(logoValue.split(',')[1]); } catch { return ''; }
+    try { return sanitizeSvg(decodeURIComponent(logoValue.split(',')[1])); } catch { return ''; }
   }
-  try {
-    const resp = await fetch(logoValue);
-    const text = await resp.text();
-    if (text.includes('<svg')) return text;
-    return '';
-  } catch { return ''; }
+  if (logoValue.startsWith('https://') || logoValue.startsWith('http://')) {
+    try {
+      const resp = await fetch(logoValue);
+      const text = await resp.text();
+      if (text.includes('<svg')) return sanitizeSvg(text);
+      return '';
+    } catch { return ''; }
+  }
+  return '';
 }
 
 // ─── File download helper ───────────────────────────────────
@@ -182,6 +206,7 @@ const PdfPreview = {
 
     onBeforeUnmount(() => {
       alive = false;
+      regenerate.cancel();
       if (pdfUrl.value) URL.revokeObjectURL(pdfUrl.value);
     });
 
@@ -486,6 +511,9 @@ const App = {
     </div>
   `,
   setup() {
+    const toast = PrimeVue.useToast();
+    const confirmSvc = PrimeVue.useConfirm();
+
     const mode = ref('edit');
     const title = ref('');
     const logo = ref('');
@@ -535,7 +563,7 @@ const App = {
 
     const logoPreviewHtml = computed(() => {
       if (!logoSvg.value) return '';
-      return `<div style="display:inline-block; max-width:120px; max-height:48px">${logoSvg.value}</div>`;
+      return `<div style="display:inline-block; max-width:120px; max-height:48px">${sanitizeSvg(logoSvg.value)}</div>`;
     });
 
     const extractLogo = debounce(async (url) => {
@@ -566,13 +594,17 @@ const App = {
         updated: updated.value,
       };
       const md = MdParser.serialize(metadata, markdownBody.value);
-      saveDocument(currentDocId.value, md);
-
-      const idx = documents.value.findIndex(d => d.id === currentDocId.value);
-      if (idx !== -1) {
-        documents.value[idx].title = title.value || 'Untitled';
-        documents.value[idx].lastModified = updated.value;
-        saveIndex(toRaw(documents.value));
+      try {
+        saveDocument(currentDocId.value, md);
+        const idx = documents.value.findIndex(d => d.id === currentDocId.value);
+        if (idx !== -1) {
+          documents.value[idx].title = title.value || 'Untitled';
+          documents.value[idx].lastModified = updated.value;
+          saveIndex(toRaw(documents.value));
+        }
+      } catch (e) {
+        console.error('Auto-save failed:', e);
+        toast.add({ severity: 'error', summary: 'Storage Full', detail: 'Could not save. Try deleting unused documents.', life: 5000 });
       }
     }, 500);
 
@@ -631,9 +663,12 @@ const App = {
 
     function confirmDeleteDoc() {
       if (documents.value.length <= 1) return;
-      if (confirm('Delete this document? This cannot be undone.')) {
-        deleteDocument(currentDocId.value);
-      }
+      confirmSvc.require({
+        message: 'Delete this document? This cannot be undone.',
+        header: 'Confirm Delete',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteDocument(currentDocId.value),
+      });
     }
 
     function deleteDocument(id) {
@@ -695,8 +730,10 @@ const App = {
           alert('Please upload a valid SVG file.');
           return;
         }
-        logoSvg.value = svgText;
-        logo.value = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+        logoSvg.value = sanitizeSvg(svgText);
+        const encoded = new TextEncoder().encode(svgText);
+        const binary = Array.from(encoded, b => String.fromCharCode(b)).join('');
+        logo.value = 'data:image/svg+xml;base64,' + btoa(binary);
       };
       reader.readAsText(file);
       e.target.value = '';
@@ -728,14 +765,19 @@ const App = {
     }
 
     async function onDownloadPdf() {
-      await PdfGenerator.generate({
-        title: title.value,
-        logoSvg: logoSvg.value,
-        versions: toRaw(versions.value),
-        pdfStyles: toRaw(pdfStyles.value),
-        markdown: markdownBody.value,
-        pageSize: pageSize.value,
-      });
+      try {
+        await PdfGenerator.generate({
+          title: title.value,
+          logoSvg: logoSvg.value,
+          versions: toRaw(versions.value),
+          pdfStyles: toRaw(pdfStyles.value),
+          markdown: markdownBody.value,
+          pageSize: pageSize.value,
+        });
+      } catch (e) {
+        console.error('PDF export error:', e);
+        toast.add({ severity: 'error', summary: 'PDF Export Failed', detail: e.message || 'Unknown error', life: 5000 });
+      }
     }
 
     function addVersion() {
@@ -770,41 +812,48 @@ const App = {
     function applyColorsToAllDocs() {
       const count = documents.value.length - 1;
       if (count < 1) return;
-      if (!confirm(`Apply current heading colors to ${count} other document${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
-
-      const currentStyles = toRaw(pdfStyles.value);
-      const colorOverrides = {};
-      const merged = StyleManager.mergeStyles(currentStyles);
-      for (const key of [...StyleManager.HEADING_KEYS, 'body']) {
-        colorOverrides[key] = { color: merged[key].color };
-      }
-
-      for (const doc of documents.value) {
-        if (doc.id === currentDocId.value) continue;
-        const md = loadDocument(doc.id);
-        const parsed = MdParser.parse(md);
-        const updatedStyles = { ...(parsed.pdfStyles || {}) };
-        for (const [key, val] of Object.entries(colorOverrides)) {
-          updatedStyles[key] = { ...(updatedStyles[key] || {}), ...val };
-        }
-        const newMd = MdParser.serialize({ ...parsed, pdfStyles: updatedStyles }, parsed.body);
-        saveDocument(doc.id, newMd);
-      }
+      confirmSvc.require({
+        message: `Apply current heading colors to ${count} other document${count > 1 ? 's' : ''}? This cannot be undone.`,
+        header: 'Apply Colors to All',
+        accept: () => {
+          const currentStyles = toRaw(pdfStyles.value);
+          const colorOverrides = {};
+          const merged = StyleManager.mergeStyles(currentStyles);
+          for (const key of [...StyleManager.HEADING_KEYS, 'body']) {
+            colorOverrides[key] = { color: merged[key].color };
+          }
+          for (const doc of documents.value) {
+            if (doc.id === currentDocId.value) continue;
+            const md = loadDocument(doc.id);
+            const parsed = MdParser.parse(md);
+            const updatedStyles = { ...(parsed.pdfStyles || {}) };
+            for (const [key, val] of Object.entries(colorOverrides)) {
+              updatedStyles[key] = { ...(updatedStyles[key] || {}), ...val };
+            }
+            const newMd = MdParser.serialize({ ...parsed, pdfStyles: updatedStyles }, parsed.body);
+            saveDocument(doc.id, newMd);
+          }
+        },
+      });
     }
 
     function applyLogoToAllDocs() {
       const count = documents.value.length - 1;
       if (count < 1) return;
-      if (!confirm(`Apply current logo to ${count} other document${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
-
-      const currentLogo = logo.value;
-      for (const doc of documents.value) {
-        if (doc.id === currentDocId.value) continue;
-        const md = loadDocument(doc.id);
-        const parsed = MdParser.parse(md);
-        const newMd = MdParser.serialize({ ...parsed, logo: currentLogo }, parsed.body);
-        saveDocument(doc.id, newMd);
-      }
+      confirmSvc.require({
+        message: `Apply current logo to ${count} other document${count > 1 ? 's' : ''}? This cannot be undone.`,
+        header: 'Apply Logo to All',
+        accept: () => {
+          const currentLogo = logo.value;
+          for (const doc of documents.value) {
+            if (doc.id === currentDocId.value) continue;
+            const md = loadDocument(doc.id);
+            const parsed = MdParser.parse(md);
+            const newMd = MdParser.serialize({ ...parsed, logo: currentLogo }, parsed.body);
+            saveDocument(doc.id, newMd);
+          }
+        },
+      });
     }
 
     async function showGuide() {
@@ -812,7 +861,7 @@ const App = {
         try {
           const resp = await fetch('assets/formatting-guide.md');
           const md = await resp.text();
-          guideHtml.value = marked.parse(md);
+          guideHtml.value = DOMPurify.sanitize(marked.parse(md));
         } catch (e) {
           guideHtml.value = '<p>Could not load formatting guide.</p>';
         }
@@ -885,6 +934,5 @@ app.component('p-toast', PrimeVue.Toast);
 app.component('p-divider', PrimeVue.Divider);
 app.component('p-selectbutton', PrimeVue.SelectButton);
 app.component('p-splitbutton', PrimeVue.SplitButton);
-app.component('p-datepicker', PrimeVue.DatePicker);
 
 app.mount('#app');
