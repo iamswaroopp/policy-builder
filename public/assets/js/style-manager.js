@@ -3,10 +3,10 @@
  */
 window.StyleManager = (() => {
   const DEFAULTS = {
-    h1: { color: '#1565C0', size: '22px' },
-    h2: { color: '#1976D2', size: '18px' },
-    h3: { color: '#1976D2', size: '16px' },
-    h4: { color: '#1976D2', size: '14px' },
+    h1: { color: '#1565C0', size: '18px' },
+    h2: { color: '#1976D2', size: '16px' },
+    h3: { color: '#1976D2', size: '14px' },
+    h4: { color: '#1976D2', size: '13px' },
     h5: { color: '#1976D2', size: '12px' },
     body: { color: '#1a1a1a', size: '12px' },
     fontFamily: 'Roboto',
