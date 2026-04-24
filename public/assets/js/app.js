@@ -428,7 +428,7 @@ const App = {
                 </label>
               </div>
               <div v-if="logoSvg" style="margin-top:6px; padding:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; text-align:center">
-                <div v-html="logoPreviewHtml" style="max-height:48px; overflow:hidden"></div>
+                <div v-html="logoPreviewHtml"></div>
               </div>
               <p-button v-if="logo && documents.length > 1" label="Apply Logo to All Docs" icon="pi pi-images" severity="secondary" size="small" text style="margin-top:4px; padding:4px 0; font-size:12px" @click="applyLogoToAllDocs" />
             </div>
@@ -564,7 +564,7 @@ const App = {
 
     const logoPreviewHtml = computed(() => {
       if (!logoSvg.value) return '';
-      return `<div style="display:inline-block; max-width:120px; max-height:48px">${sanitizeSvg(logoSvg.value)}</div>`;
+      return `<div style="display:inline-block; max-width:100%; max-height:80px; overflow:visible">${sanitizeSvg(logoSvg.value).replace(/<svg/, '<svg style="max-width:100%; max-height:80px; width:auto; height:auto"')}</div>`;
     });
 
     const extractLogo = debounce(async (url) => {
