@@ -1,0 +1,164 @@
+/* Policy Builder — App Styles */
+
+/* ─── Base ─────────────────────────────────────────────── */
+html, body, #app {
+  width: 100vw;
+  height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #fff;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide scrollbar gutter but keep scrolling */
+.scrollbar-thin::-webkit-scrollbar { width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #D4D4D4; border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #A3A3A3; }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: #D4D4D4 transparent; }
+
+/* ─── EasyMDE Editor overrides ─────────────────────────── */
+.EasyMDEContainer {
+  border: none !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.EasyMDEContainer .CodeMirror {
+  border: none;
+  border-top: 1px solid #E5E5E5;
+  border-radius: 0;
+  flex: 1;
+  min-height: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #171717;
+  padding: 16px;
+  background: #fff;
+}
+
+.EasyMDEContainer .editor-toolbar {
+  background: #FAFAFA;
+  border: none;
+  border-bottom: 1px solid #E5E5E5;
+  border-radius: 0;
+  padding: 8px 16px;
+  opacity: 1;
+}
+
+.EasyMDEContainer .editor-toolbar::before,
+.EasyMDEContainer .editor-toolbar::after {
+  display: none;
+}
+
+.EasyMDEContainer .editor-toolbar button {
+  color: #525252 !important;
+  border: none !important;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  margin: 0 1px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.EasyMDEContainer .editor-toolbar button:hover {
+  background: #E5E5E5;
+  color: #171717 !important;
+}
+
+.EasyMDEContainer .editor-toolbar button.active {
+  background: #E5E5E5;
+  color: #171717 !important;
+}
+
+.EasyMDEContainer .editor-toolbar i.separator {
+  border-left-color: #E5E5E5;
+  margin: 0 6px;
+}
+
+.EasyMDEContainer .editor-statusbar {
+  display: none;
+}
+
+.EasyMDEContainer .CodeMirror .CodeMirror-placeholder {
+  color: #A3A3A3;
+}
+
+.EasyMDEContainer .CodeMirror:focus-within {
+  border-color: #94A3B8;
+  box-shadow: 0 0 0 3px rgba(148,163,184,0.08);
+}
+
+/* ─── Guide Content (rendered markdown in dialog) ─────── */
+.guide-content h1 { font-size: 20px; font-weight: 700; color: #0f172a; margin: 24px 0 12px; }
+.guide-content h2 { font-size: 16px; font-weight: 600; color: #1e293b; margin: 20px 0 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+.guide-content h3 { font-size: 14px; font-weight: 600; color: #334155; margin: 16px 0 8px; }
+.guide-content p { margin: 8px 0; }
+.guide-content ul, .guide-content ol { margin: 8px 0; padding-left: 20px; }
+.guide-content li { margin: 4px 0; }
+.guide-content code { background: #f1f5f9; padding: 2px 5px; border-radius: 3px; font-size: 12px; color: #c2410c; }
+.guide-content pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; overflow-x: auto; margin: 10px 0; }
+.guide-content pre code { background: none; color: #334155; padding: 0; }
+.guide-content blockquote { border-left: 3px solid #3b82f6; background: #f0f9ff; padding: 8px 14px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+.guide-content blockquote p { margin: 4px 0; }
+.guide-content table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+.guide-content table th, .guide-content table td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+.guide-content table th { background: #f8fafc; font-weight: 600; }
+.guide-content hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
+.guide-content strong { color: #0f172a; }
+
+/* ─── PDF Preview (iframe) ─────────────────────────────── */
+/* Preview is now an iframe showing the real PDF — no custom styles needed */
+
+/* ─── Sidebar section labels ──────────────────────────── */
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* ─── Style heading row ───────────────────────────────── */
+.style-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.style-heading-row label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+/* ─── Color palette swatches ──────────────────────────── */
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-block;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.color-swatch:hover {
+  border-color: #171717;
+  transform: scale(1.15);
+}
