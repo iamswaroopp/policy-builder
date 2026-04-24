@@ -139,8 +139,8 @@ window.PdfGenerator = (() => {
         case 'list': {
           const listItems = token.items.map(item => processListItem(item, contentWidth));
           const listObj = token.ordered
-            ? { ol: listItems, margin: [0, 4, 0, 4] }
-            : { ul: listItems, margin: [0, 4, 0, 4] };
+            ? { ol: listItems, margin: [0, 4, 0, 4], alignment: 'justify' }
+            : { ul: listItems, margin: [0, 4, 0, 4], alignment: 'justify' };
           if (token.ordered && token.start !== undefined && token.start > 1) {
             listObj.start = token.start;
           }
@@ -375,7 +375,7 @@ window.PdfGenerator = (() => {
         h3: { fontSize: parseInt(styles.h3.size, 10), bold: true, color: styles.h3.color, margin: [0, 16, 0, 6] },
         h4: { fontSize: parseInt(styles.h4.size, 10), bold: true, color: styles.h4.color, margin: [0, 14, 0, 4] },
         h5: { fontSize: parseInt(styles.h5.size, 10), bold: true, color: styles.h5.color, margin: [0, 12, 0, 4] },
-        body: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3] },
+        body: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3], alignment: 'justify' },
       },
 
       defaultStyle: {
@@ -383,7 +383,6 @@ window.PdfGenerator = (() => {
         fontSize: parseInt(styles.body.size, 10) || 12,
         color: styles.body.color || '#333333',
         lineHeight: 1.5,
-        alignment: 'justify',
       },
     };
   }
