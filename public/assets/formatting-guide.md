@@ -6,24 +6,43 @@ This reference describes the complete `.md` file format used by Policy Builder. 
 
 ## File Structure
 
-Every policy file is a standard Markdown file with an optional YAML frontmatter block at the top:
+Every policy file is a standard Markdown file. Metadata (title, versions, page size) is stored as YAML frontmatter **wrapped inside an HTML comment** so it stays hidden when the file is viewed as plain Markdown.
 
-```
+```markdown
+<!--
 ---
-title: Information Security Policy
-logo: https://example.com/logo.png
+title: Anti-virus Policy
 pageSize: Legal
 versions:
-  - version: '1.0'
-    date: '2026-01-15'
-    updatedBy: John Smith
+  - version: '1.4'
+    date: '2022-12-14'
+    updatedBy: Swaroop Prashanth
+  - version: '1.3'
+    date: '2021-12-16'
+    updatedBy: Swaroop Prashanth
+  - version: '1.2'
+    date: '2020-12-18'
+    updatedBy: Swaroop Prashanth
   - version: '1.1'
-    date: '2026-04-20'
-    updatedBy: Jane Doe
+    date: '2019-12-12'
+    updatedBy: Swaroop Prashanth
+  - version: '1.0'
+    date: '2018-12-17'
+    updatedBy: Swaroop Prashanth
 ---
+-->
 
-Your markdown content starts here...
+# 1. Overview
+
+Your policy content starts here...
 ```
+
+**Key points about the metadata block:**
+
+- The entire YAML block sits inside `<!--` and `-->` HTML comment markers
+- The `---` delimiters go inside the comment, not outside
+- This keeps metadata invisible when the markdown is rendered normally
+- The app parses the comment to extract title, versions, and settings
 
 ### Frontmatter Fields
 
@@ -37,14 +56,34 @@ Your markdown content starts here...
 
 ### Version Entry Format
 
-Each version entry has three fields:
+Each version entry has three fields. Versions are listed in **descending order** (newest first):
 
 ```yaml
 versions:
-  - version: '1.0'        # Version number (string)
-    date: '2026-01-15'    # Date in YYYY-MM-DD format
-    updatedBy: John Smith  # Person who made the update
+  - version: '1.2'           # Newest version first
+    date: '2026-04-20'       # Date in YYYY-MM-DD format
+    updatedBy: Jane Doe       # Person who made the update
+  - version: '1.1'
+    date: '2026-01-15'
+    updatedBy: Jane Doe
+  - version: '1.0'           # Oldest version last
+    date: '2025-06-01'
+    updatedBy: John Smith
 ```
+
+Version numbers follow `1.0`, `1.1`, `1.2`, `1.3` ... format. Each review or update increments the minor number.
+
+---
+
+## Merging Multiple Policies
+
+When multiple policy files are merged into a single `.md` file, each policy is separated by the following marker:
+
+```html
+<!-- ===POLICY-BREAK=== -->
+```
+
+The app uses this marker to split the merged file back into individual policies. Do not use `---` as a separator between policies — it conflicts with YAML frontmatter delimiters.
 
 ---
 
@@ -65,29 +104,49 @@ Headings control both the document structure and the auto-generated Table of Con
 Use numbered headings for clear document structure:
 
 ```markdown
-# 1. Access Control Policy
+# 1. Overview
 
-## 1.1 User Access Management
+## 1.1 Purpose
 
-All users must be assigned a unique identifier...
+## 1.2 Scope
 
-### 1.1.1 Password Requirements
+# 2. Policy
 
-- Minimum 14 characters
-- Changed every 90 days
+## 2.1 Employee Requirements
 
-## 1.2 Network Access Control
+## 2.2 Data in Motion
 
-Connections to external networks shall be controlled...
+## 2.3 Endpoints and Workstations
 
-# 2. Data Classification
-
-## 2.1 Classification Levels
-
-...
+# 3. Enforcement
 ```
 
 > **Important:** Only `#` (H1) and `##` (H2) headings appear in the Table of Contents. Use them for your main sections and sub-sections.
+
+### Common Section Patterns
+
+Most Gainfront policies follow one of these heading structures:
+
+**Pattern A — Overview/Policy/Enforcement:**
+```markdown
+# 1. Overview
+## 1.1 Purpose
+## 1.2 Scope
+# 2. Privacy
+# 3. Policy
+## 3.1 ...subsections...
+# 4. Enforcement
+```
+
+**Pattern B — Direct Sections:**
+```markdown
+# 1. Scope
+# 2. Policy Elements
+## 2.1 ...subsection...
+## 2.2 ...subsection...
+# 3. Non-Compliance
+# 4. Questions
+```
 
 ---
 
@@ -197,74 +256,84 @@ When exported, the PDF contains these pages in order:
 ## Complete Example File
 
 ```markdown
+<!--
 ---
-title: Acceptable Use Policy
-logo: https://company.com/logo.png
+title: Data Loss Prevention Policy
 pageSize: Legal
 versions:
-  - version: '1.0'
-    date: '2026-01-10'
-    updatedBy: Security Team
+  - version: '1.4'
+    date: '2022-12-17'
+    updatedBy: Swaroop Prashanth
+  - version: '1.3'
+    date: '2021-12-16'
+    updatedBy: Swaroop Prashanth
+  - version: '1.2'
+    date: '2020-12-18'
+    updatedBy: Swaroop Prashanth
   - version: '1.1'
-    date: '2026-04-15'
-    updatedBy: Compliance Officer
+    date: '2019-12-12'
+    updatedBy: Swaroop Prashanth
+  - version: '1.0'
+    date: '2018-12-17'
+    updatedBy: Swaroop Prashanth
 ---
+-->
 
-# 1. Purpose
+# 1. Overview
 
-This policy defines acceptable use of company IT resources
-to protect the organization and its employees.
+Data Loss Prevention (DLP) is a set of technologies and business
+policies to make sure end-users do not send sensitive or confidential
+data outside the organization without proper authorization.
 
-## 1.1 Scope
+## 1.1 Purpose
 
-This policy applies to all employees, contractors, and
-third-party users who access company systems.
+The purpose of this document is to protect restricted, confidential,
+or sensitive data from loss to avoid reputation damage and to avoid
+adversely impacting its customers.
 
-## 1.2 Definitions
+## 1.2 Scope
 
-| Term | Definition |
-|------|-----------|
-| PII | Personally Identifiable Information |
-| MFA | Multi-Factor Authentication |
+This policy applies to all employees, interns, contractors,
+consultants, and temporary employees.
 
-# 2. General Usage
+# 2. Privacy
 
-## 2.1 Authorized Use
+The Data Loss Prevention Policy document shall be considered as
+"confidential" and shall be made available to the concerned persons
+with proper access control.
 
-Company IT resources are provided for business purposes.
-Limited personal use is permitted if it:
+# 3. Policy
 
-- Does not interfere with work duties
-- Does not consume excessive resources
-- Complies with all other company policies
+## 3.1 Employee Requirements
 
-## 2.2 Prohibited Activities
+1. All employees must complete security awareness training
+2. Visitors must be escorted by an authorized employee at all times
+3. Use a secure password on all systems as per the password policy
 
-The following activities are strictly prohibited:
+## 3.2 Data in Motion
 
-1. Sharing credentials or passwords
-2. Installing unauthorized software
-3. Accessing inappropriate content
-4. Attempting to bypass security controls
+- DLP solution will be configured at endpoints to identify data in motion
+- DLP will scan for data in motion and identify specific content
+- DLP will log incidents centrally for review
 
-### 2.2.1 Email and Communications
+## 3.3 Endpoints and Workstations
 
-> **Note:** All company email is subject to monitoring
-> and may be reviewed for compliance purposes.
+1. All devices in scope will have full-disk encryption enabled
+2. Encryption policy must be managed and compliance validated
 
-- Do not open suspicious attachments
-- Report phishing attempts immediately
-- Use encryption for sensitive data
+| Requirement | Details |
+|-------------|---------|
+| Full-disk encryption | All devices in scope |
+| AUP training | Required for all users |
+| Lost device reporting | Immediate notification |
 
-# 3. Enforcement
+> **Note:** All security-related events will be logged and audited
+> to identify inappropriate access or malicious use.
 
-Violations may result in disciplinary action up to
-and including termination of employment.
+# 4. Enforcement
 
-## 3.1 Reporting
-
-Report violations to **security@company.com** or
-through the internal reporting portal.
+Any employee found to have violated this policy may be subjected
+to disciplinary action in line with the HR Policy.
 ```
 
 ---
@@ -274,6 +343,9 @@ through the internal reporting portal.
 - Keep `#` H1 headings for major numbered sections
 - Keep `##` H2 headings for sub-sections — both appear in TOC
 - Use `###` H3 and below for details that don't need TOC entries
-- Add version entries each time the policy is updated
+- Add version entries each time the policy is updated (newest first)
+- Version numbers increment as `1.0`, `1.1`, `1.2`, etc.
 - Set page size before exporting (Legal is recommended for policies)
 - Customize heading colors and font family in PDF Export Styles
+- Wrap frontmatter in `<!-- -->` HTML comments
+- Use `<!-- ===POLICY-BREAK=== -->` to separate policies in merged files
