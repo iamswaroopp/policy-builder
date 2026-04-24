@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="16" fill="#0f172a"/>
-  <path d="M11 8h7l5 5v12a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z" fill="#f1f5f9"/>
-  <path d="M18 8l5 5h-3.5a1.5 1.5 0 0 1-1.5-1.5V8z" fill="#94a3b8"/>
-  <rect x="12" y="15.5" width="6" height="1.4" rx=".7" fill="#2563eb"/>
-  <rect x="12" y="18.5" width="8" height="1" rx=".5" fill="#cbd5e1"/>
-  <rect x="12" y="21" width="6.5" height="1" rx=".5" fill="#cbd5e1"/>
-  <rect x="12" y="23.5" width="5" height="1" rx=".5" fill="#cbd5e1"/>
+  <path d="M10.75 6h8l5 5v13a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#f1f5f9"/>
+  <path d="M18.75 6l5 5h-3.5a1.5 1.5 0 0 1-1.5-1.5V6z" fill="#94a3b8"/>
+  <rect x="11.75" y="14" width="6" height="1.4" rx=".7" fill="#2563eb"/>
+  <rect x="11.75" y="17" width="8" height="1" rx=".5" fill="#cbd5e1"/>
+  <rect x="11.75" y="19.5" width="6.5" height="1" rx=".5" fill="#cbd5e1"/>
+  <rect x="11.75" y="22" width="5" height="1" rx=".5" fill="#cbd5e1"/>
 </svg>
