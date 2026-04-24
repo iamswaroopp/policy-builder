@@ -59,6 +59,7 @@ window.MdParser = (() => {
     }
 
     return {
+      id: String(meta.id || ''),
       title: String(meta.title || ''),
       logo: String(meta.logo || ''),
       versions: Array.isArray(meta.versions) ? meta.versions.map(v => ({
@@ -77,6 +78,7 @@ window.MdParser = (() => {
   function serialize(metadata, body) {
     const meta = {};
 
+    if (metadata.id) meta.id = metadata.id;
     if (metadata.title) meta.title = metadata.title;
     if (metadata.logo) meta.logo = metadata.logo;
     if (metadata.created) meta.created = metadata.created;

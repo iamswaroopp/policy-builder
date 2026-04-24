@@ -619,6 +619,7 @@ const App = {
       if (!currentDocId.value) return;
       updated.value = new Date().toISOString();
       const metadata = {
+        id: currentDocId.value,
         title: title.value,
         logo: logo.value,
         versions: toRaw(versions.value),
@@ -789,29 +790,46 @@ const App = {
         const currentLogo = logo.value;
         const currentStyles = toRaw(pdfStyles.value);
 
-        if (parts.length === 1) {
-          // Single doc — load into current, fill in missing logo/styles
-          const parsed = MdParser.parse(parts[0]);
+        const importDoc = (parsed) => {
           if (!parsed.logo && currentLogo) parsed.logo = currentLogo;
           if (!parsed.pdfStyles || Object.keys(parsed.pdfStyles).length === 0) parsed.pdfStyles = currentStyles;
-          const enriched = MdParser.serialize(parsed, parsed.body);
-          loadDocumentState(enriched);
-        } else {
-          // Multi-doc — create a new doc for each, fill in missing logo/styles
-          for (const part of parts) {
-            const parsed = MdParser.parse(part);
-            if (!parsed.logo && currentLogo) parsed.logo = currentLogo;
-            if (!parsed.pdfStyles || Object.keys(parsed.pdfStyles).length === 0) parsed.pdfStyles = currentStyles;
+
+          // If the file has an id that matches an existing doc, update it
+          const existingIdx = parsed.id ? documents.value.findIndex(d => d.id === parsed.id) : -1;
+          if (existingIdx !== -1) {
+            const id = parsed.id;
             const enriched = MdParser.serialize(parsed, parsed.body);
-            const id = generateId();
+            saveDocument(id, enriched);
+            const now = new Date().toISOString();
+            documents.value[existingIdx].title = parsed.title || 'Untitled';
+            documents.value[existingIdx].lastModified = now;
+            return id;
+          } else {
+            const id = parsed.id || generateId();
+            parsed.id = id;
+            const enriched = MdParser.serialize(parsed, parsed.body);
             const now = new Date().toISOString();
             const doc = { id, title: parsed.title || 'Imported', created: parsed.created || now, lastModified: parsed.updated || now };
             documents.value.push(doc);
             saveDocument(id, enriched);
+            return id;
+          }
+        };
+
+        if (parts.length === 1) {
+          const parsed = MdParser.parse(parts[0]);
+          const id = importDoc(parsed);
+          saveIndex(toRaw(documents.value));
+          selectDocument(id);
+        } else {
+          let firstId = null;
+          for (const part of parts) {
+            const parsed = MdParser.parse(part);
+            const id = importDoc(parsed);
+            if (!firstId) firstId = id;
           }
           saveIndex(toRaw(documents.value));
-          const firstNew = documents.value[documents.value.length - parts.length];
-          if (firstNew) selectDocument(firstNew.id);
+          if (firstId) selectDocument(firstId);
         }
       };
       reader.readAsText(file);
@@ -839,6 +857,7 @@ const App = {
 
     function onDownloadMd() {
       const metadata = {
+        id: currentDocId.value,
         title: title.value,
         logo: logo.value,
         versions: toRaw(versions.value),
