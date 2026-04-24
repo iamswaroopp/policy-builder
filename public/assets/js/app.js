@@ -218,7 +218,7 @@ const PdfPreview = {
 const StylePanel = {
   name: 'StylePanel',
   props: ['pdfStyles'],
-  emits: ['update:pdfStyles', 'applyColorsToAll'],
+  emits: ['update:pdfStyles', 'applyColorsToAll', 'resetColorsToAll'],
   template: `
     <div>
       <!-- Color Theme Palette -->
@@ -268,7 +268,10 @@ const StylePanel = {
       <!-- Actions -->
       <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px">
         <p-button label="Apply Colors to All Docs" icon="pi pi-palette" severity="secondary" size="small" outlined @click="$emit('applyColorsToAll')" />
-        <p-button label="Reset to Defaults" severity="secondary" size="small" outlined @click="resetToDefaults" />
+        <div style="display:flex; gap:8px">
+          <p-button label="Reset" severity="secondary" size="small" outlined @click="resetToDefaults" style="flex:1" />
+          <p-button label="Reset All Docs" severity="secondary" size="small" outlined @click="$emit('resetColorsToAll')" style="flex:1" />
+        </div>
       </div>
     </div>
   `,
@@ -510,6 +513,7 @@ const App = {
                 :pdfStyles="pdfStyles"
                 @update:pdfStyles="pdfStyles = $event"
                 @applyColorsToAll="applyColorsToAllDocs"
+                @resetColorsToAll="resetColorsToAllDocs"
               />
             </p-panel>
           </div>
@@ -998,6 +1002,23 @@ const App = {
       });
     }
 
+    function resetColorsToAllDocs() {
+      const total = documents.value.length;
+      confirmSvc.require({
+        message: `Reset colors to defaults for all ${total} document${total > 1 ? 's' : ''}? This cannot be undone.`,
+        header: 'Reset All to Defaults',
+        accept: () => {
+          pdfStyles.value = StyleManager.deepCopy(StyleManager.DEFAULTS);
+          for (const doc of documents.value) {
+            const md = loadDocument(doc.id);
+            const parsed = MdParser.parse(md);
+            const newMd = MdParser.serialize({ ...parsed, pdfStyles: {} }, parsed.body);
+            saveDocument(doc.id, newMd);
+          }
+        },
+      });
+    }
+
     function applyLogoToAllDocs() {
       const count = documents.value.length - 1;
       if (count < 1) return;
@@ -1089,7 +1110,7 @@ const App = {
       triggerUpload, triggerLogoUpload, onFileUpload, onLogoUpload,
       onDownloadMd, onDownloadAll, onDownloadPdf, onExportAllPdf,
       addVersion, removeVersion, emitVersions,
-      applyColorsToAllDocs, applyLogoToAllDocs, showGuide,
+      applyColorsToAllDocs, resetColorsToAllDocs, applyLogoToAllDocs, showGuide,
       handleSignIn, handleSignOut,
     };
   },
