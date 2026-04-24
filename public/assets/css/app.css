@@ -15,6 +15,19 @@
   border: 2px solid #e2e8f0;
   object-fit: cover;
 }
+.auth-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ─── Base ─────────────────────────────────────────────── */
 html, body, #app {

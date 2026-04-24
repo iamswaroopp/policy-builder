@@ -55,7 +55,7 @@ window.GoogleAuth = (() => {
       });
       if (res.ok) {
         const info = await res.json();
-        userProfile = { name: info.name, picture: info.picture };
+        userProfile = { name: info.name, email: info.email, picture: info.picture };
       }
       if (onAuthChangeCallback) onAuthChangeCallback(true);
     } catch {
@@ -81,7 +81,7 @@ window.GoogleAuth = (() => {
       });
       if (res.ok) {
         const info = await res.json();
-        userProfile = { name: info.name, picture: info.picture };
+        userProfile = { name: info.name, email: info.email, picture: info.picture };
       }
     } catch (e) {
       console.warn('Failed to fetch user profile:', e);
