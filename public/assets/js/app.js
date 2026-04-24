@@ -355,7 +355,7 @@ const App = {
               </template>
             </p-select>
             <p-button icon="pi pi-plus" severity="success" size="small" outlined @click="createDocument" />
-            <p-button icon="pi pi-trash" severity="danger" size="small" outlined @click="confirmDeleteDoc" :disabled="documents.length <= 1" />
+            <p-splitbutton icon="pi pi-trash" severity="danger" size="small" outlined @click="confirmDeleteDoc" :model="deleteMenuItems" :disabled="documents.length <= 1" />
           </div>
         </template>
         <template #end>
@@ -376,6 +376,15 @@ const App = {
               :allowEmpty="false"
             />
             <p-button icon="pi pi-question-circle" label="Guide" severity="secondary" size="small" outlined @click="showGuide" title="Formatting Guide" />
+            <div style="width:1px; height:24px; background:#e2e8f0; margin:0 4px"></div>
+            <p-button v-if="!isSignedIn" icon="pi pi-google" label="Sign in" severity="secondary" size="small" outlined @click="handleSignIn" />
+            <div v-else style="display:flex; align-items:center; gap:8px">
+              <i v-if="syncStatus === 'syncing'" class="pi pi-spin pi-spinner" style="font-size:14px; color:#64748b" title="Syncing..."></i>
+              <i v-else-if="syncStatus === 'synced'" class="pi pi-cloud" style="font-size:14px; color:#22c55e" title="Synced to Drive"></i>
+              <i v-else-if="syncStatus === 'error'" class="pi pi-exclamation-triangle" style="font-size:14px; color:#ef4444" title="Sync error"></i>
+              <img v-if="userProfile?.picture" :src="userProfile.picture" class="auth-avatar" :title="userProfile.email" referrerpolicy="no-referrer" />
+              <p-button icon="pi pi-sign-out" severity="secondary" size="small" text @click="handleSignOut" title="Sign out" />
+            </div>
           </div>
         </template>
       </p-toolbar>
@@ -530,6 +539,9 @@ const App = {
     const logoInput = ref(null);
     const guideVisible = ref(false);
     const guideHtml = ref('');
+    const isSignedIn = ref(false);
+    const userProfile = ref(null);
+    const syncStatus = ref('idle');
 
     const modeOptions = [
       { label: 'Edit', value: 'edit' },
@@ -543,6 +555,10 @@ const App = {
 
     const downloadMenuItems = [
       { label: 'Download All', icon: 'pi pi-file-export', command: () => onDownloadAll() },
+    ];
+
+    const deleteMenuItems = [
+      { label: 'Delete All', icon: 'pi pi-trash', command: () => confirmDeleteAll() },
     ];
 
     function formatTimestamp(iso) {
@@ -580,6 +596,21 @@ const App = {
       } else {
         createDocument();
       }
+
+      // Initialize Google Auth (GSI loads async)
+      const initAuth = () => {
+        if (typeof google === 'undefined' || !google.accounts) {
+          setTimeout(initAuth, 200);
+          return;
+        }
+        GoogleAuth.init(async (signedIn) => {
+          isSignedIn.value = signedIn;
+          userProfile.value = GoogleAuth.getUserProfile();
+          if (signedIn) await syncOnSignIn();
+        });
+      };
+      initAuth();
+      DriveSync.init((status) => { syncStatus.value = status; });
     });
 
     const isLoadingDoc = ref(false);
@@ -605,6 +636,7 @@ const App = {
           documents.value[idx].lastModified = updated.value;
           saveIndex(toRaw(documents.value));
         }
+        syncToDrive();
       } catch (e) {
         console.error('Auto-save failed:', e);
         toast.add({ severity: 'error', summary: 'Storage Full', detail: 'Could not save. Try deleting unused documents.', life: 5000 });
@@ -708,6 +740,32 @@ const App = {
         selectDocument(documents.value[0].id);
       } else {
         createDocument();
+      }
+      syncToDrive();
+    }
+
+    function confirmDeleteAll() {
+      confirmSvc.require({
+        message: `Delete all ${documents.value.length} documents? This cannot be undone.`,
+        header: 'Delete All Documents',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteAllDocuments(),
+      });
+    }
+
+    function deleteAllDocuments() {
+      for (const doc of documents.value) {
+        removeDocument(doc.id);
+      }
+      documents.value = [];
+      saveIndex([]);
+      createDocument();
+      syncToDrive();
+    }
+
+    function syncToDrive() {
+      if (isSignedIn.value) {
+        DriveSync.schedulePush(buildSyncPayload());
       }
     }
 
@@ -897,17 +955,67 @@ const App = {
       guideVisible.value = true;
     }
 
+    // ─── Google Drive Sync ─────────────────────────────────
+    function buildSyncPayload() {
+      const idx = loadIndex();
+      const docs = {};
+      for (const doc of idx) {
+        docs[doc.id] = loadDocument(doc.id);
+      }
+      return { schemaVersion: 1, lastSynced: new Date().toISOString(), index: idx, documents: docs };
+    }
+
+    async function syncOnSignIn() {
+      syncStatus.value = 'syncing';
+      try {
+        const remoteData = await DriveSync.pullFromDrive();
+        if (remoteData === null) {
+          await DriveSync.pushToDrive(buildSyncPayload());
+        } else {
+          const localIndex = loadIndex();
+          const localDocs = {};
+          for (const doc of localIndex) {
+            localDocs[doc.id] = loadDocument(doc.id);
+          }
+          const merged = DriveSync.mergeData(localIndex, localDocs, remoteData);
+          saveIndex(merged.index);
+          for (const [id, md] of Object.entries(merged.documents)) {
+            saveDocument(id, md);
+          }
+          documents.value = merged.index;
+          if (documents.value.length > 0) {
+            selectDocument(documents.value[0].id);
+          }
+          await DriveSync.pushToDrive({ schemaVersion: 1, lastSynced: new Date().toISOString(), index: merged.index, documents: merged.documents });
+        }
+        syncStatus.value = 'synced';
+      } catch (e) {
+        console.error('Sync failed:', e);
+        syncStatus.value = 'error';
+        toast.add({ severity: 'warn', summary: 'Sync Failed', detail: 'Could not sync with Google Drive. Your data is safe locally.', life: 5000 });
+      }
+    }
+
+    function handleSignIn() { GoogleAuth.signIn(); }
+
+    function handleSignOut() {
+      GoogleAuth.signOut();
+      DriveSync.stopSync();
+      syncStatus.value = 'idle';
+    }
+
     return {
       mode, title, logo, logoSvg, logoPreviewHtml, versions, pdfStyles, markdownBody,
       pageSize, created, updated, currentDocId, documents, fileInput, logoInput,
-      guideVisible, guideHtml,
-      modeOptions, pageSizeOptions, docOptions, downloadMenuItems,
+      guideVisible, guideHtml, isSignedIn, userProfile, syncStatus,
+      modeOptions, pageSizeOptions, docOptions, downloadMenuItems, deleteMenuItems,
       formatTimestamp,
-      selectDocument, createDocument, confirmDeleteDoc, deleteDocument,
+      selectDocument, createDocument, confirmDeleteDoc, confirmDeleteAll, deleteDocument, deleteAllDocuments,
       triggerUpload, triggerLogoUpload, onFileUpload, onLogoUpload,
       onDownloadMd, onDownloadAll, onDownloadPdf,
       addVersion, removeVersion, emitVersions,
       applyColorsToAllDocs, applyLogoToAllDocs, showGuide,
+      handleSignIn, handleSignOut,
     };
   },
 };

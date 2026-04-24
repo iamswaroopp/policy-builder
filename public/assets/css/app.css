@@ -1,5 +1,14 @@
 /* Policy Builder — App Styles */
 
+/* ─── Auth Avatar ─────────────────────────────────────── */
+.auth-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  object-fit: cover;
+}
+
 /* ─── Base ─────────────────────────────────────────────── */
 html, body, #app {
   width: 100vw;
