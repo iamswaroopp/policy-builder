@@ -5,7 +5,7 @@
  */
 window.GoogleAuth = (() => {
   const CLIENT_ID = '408005498550-lbkpehtnh2it40q03m2b25ak72qtifvd.apps.googleusercontent.com';
-  const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
+  const SCOPES = 'openid https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
   const SIGNED_IN_KEY = 'policy-builder-signed-in';
 
   let tokenClient = null;
