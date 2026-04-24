@@ -784,21 +784,32 @@ const App = {
       reader.onload = () => {
         const content = reader.result;
         const parts = MdParser.splitMultiDoc(content);
+
+        // Grab current doc's logo & styles as template for imports missing them
+        const currentLogo = logo.value;
+        const currentStyles = toRaw(pdfStyles.value);
+
         if (parts.length === 1) {
-          // Single doc — load into current
-          loadDocumentState(parts[0]);
+          // Single doc — load into current, fill in missing logo/styles
+          const parsed = MdParser.parse(parts[0]);
+          if (!parsed.logo && currentLogo) parsed.logo = currentLogo;
+          if (!parsed.pdfStyles || Object.keys(parsed.pdfStyles).length === 0) parsed.pdfStyles = currentStyles;
+          const enriched = MdParser.serialize(parsed, parsed.body);
+          loadDocumentState(enriched);
         } else {
-          // Multi-doc — create a new doc for each
+          // Multi-doc — create a new doc for each, fill in missing logo/styles
           for (const part of parts) {
             const parsed = MdParser.parse(part);
+            if (!parsed.logo && currentLogo) parsed.logo = currentLogo;
+            if (!parsed.pdfStyles || Object.keys(parsed.pdfStyles).length === 0) parsed.pdfStyles = currentStyles;
+            const enriched = MdParser.serialize(parsed, parsed.body);
             const id = generateId();
             const now = new Date().toISOString();
             const doc = { id, title: parsed.title || 'Imported', created: parsed.created || now, lastModified: parsed.updated || now };
             documents.value.push(doc);
-            saveDocument(id, part);
+            saveDocument(id, enriched);
           }
           saveIndex(toRaw(documents.value));
-          // Select the first imported doc
           const firstNew = documents.value[documents.value.length - parts.length];
           if (firstNew) selectDocument(firstNew.id);
         }
