@@ -64,7 +64,7 @@ window.MdParser = (() => {
       versions: Array.isArray(meta.versions) ? meta.versions.map(v => ({
         version: String(v.version || ''),
         date: toISODate(v.date),
-        updatedBy: String(v.updatedBy || ''),
+        reviewer: String(v.reviewer || ''),
       })).sort((a, b) => (b.date || '').localeCompare(a.date || '')) : [],
       pdfStyles: meta.pdfStyles || {},
       pageSize: String(meta.pageSize || 'Legal'),
@@ -84,11 +84,11 @@ window.MdParser = (() => {
 
     if (metadata.versions && metadata.versions.length > 0) {
       meta.versions = [...metadata.versions]
-        .filter(v => v.version || v.date || v.updatedBy)
+        .filter(v => v.version || v.date || v.reviewer)
         .map(v => ({
           version: v.version,
           date: toISODate(v.date),
-          updatedBy: v.updatedBy,
+          reviewer: v.reviewer,
         }))
         .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     }

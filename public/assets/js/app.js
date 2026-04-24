@@ -447,7 +447,7 @@ const App = {
                     <tr style="border-bottom:1px solid var(--p-surface-200)">
                       <th style="text-align:left; padding:6px 8px; font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8">Version</th>
                       <th style="text-align:left; padding:6px 8px; font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8">Date</th>
-                      <th style="text-align:left; padding:6px 8px; font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8">Updated By</th>
+                      <th style="text-align:left; padding:6px 8px; font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8">Reviewer</th>
                       <th style="width:36px"></th>
                     </tr>
                   </thead>
@@ -464,7 +464,7 @@ const App = {
                         >
                       </td>
                       <td style="padding:4px 8px">
-                        <input v-model="v.updatedBy" @input="emitVersions" placeholder="Name"
+                        <input v-model="v.reviewer" @input="emitVersions" placeholder="Name"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
@@ -653,7 +653,7 @@ const App = {
             nextVersion = latest.version.trim() + '.1';
           }
         }
-        versions.value.unshift({ version: nextVersion, date: today, updatedBy: latest ? latest.updatedBy : '' });
+        versions.value.unshift({ version: nextVersion, date: today, reviewer: latest ? latest.reviewer : '' });
       }
     }
 
@@ -682,7 +682,7 @@ const App = {
       title.value = '';
       logo.value = templateLogo;
       const today = now.split('T')[0];
-      versions.value = [{ version: '1.0', date: today, updatedBy: 'Reviewer' }];
+      versions.value = [{ version: '1.0', date: today, reviewer: 'Reviewer' }];
       pdfStyles.value = templateStyles;
       pageSize.value = 'Legal';
       created.value = now;
@@ -824,8 +824,8 @@ const App = {
           }
         }
       }
-      const latestUpdatedBy = versions.value.length > 0 ? (versions.value[0].updatedBy || '') : '';
-      versions.value.unshift({ version: nextVersion, date: today, updatedBy: latestUpdatedBy });
+      const latestUpdatedBy = versions.value.length > 0 ? (versions.value[0].reviewer || '') : '';
+      versions.value.unshift({ version: nextVersion, date: today, reviewer: latestUpdatedBy });
     }
 
     function removeVersion(index) {

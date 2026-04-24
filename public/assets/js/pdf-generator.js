@@ -293,14 +293,14 @@ window.PdfGenerator = (() => {
         [
           { text: 'Version', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
           { text: 'Date', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
-          { text: 'Updated By', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
+          { text: 'Reviewer', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
         ],
       ];
       for (const v of versions) {
         vhBody.push([
           { text: v.version || '', color: styles.body.color, margin: [6, 6, 6, 6] },
           { text: v.date || '', color: styles.body.color, margin: [6, 6, 6, 6] },
-          { text: v.updatedBy || '', color: styles.body.color, margin: [6, 6, 6, 6] },
+          { text: v.reviewer || '', color: styles.body.color, margin: [6, 6, 6, 6] },
         ]);
       }
       vhContent.push(
