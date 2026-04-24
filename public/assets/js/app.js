@@ -377,7 +377,7 @@ const App = {
             />
             <p-button icon="pi pi-question-circle" label="Guide" severity="secondary" size="small" outlined @click="showGuide" title="Formatting Guide" />
             <div style="width:1px; height:24px; background:#e2e8f0; margin:0 4px"></div>
-            <p-button v-if="!isSignedIn" icon="pi pi-google" label="Sign in" severity="secondary" size="small" outlined @click="handleSignIn" />
+            <p-button v-if="!isSignedIn" icon="pi pi-google" label="Sync to Drive" severity="secondary" size="small" outlined @click="handleSignIn" />
             <div v-else style="display:flex; align-items:center; gap:8px">
               <i v-if="syncStatus === 'syncing'" class="pi pi-spin pi-spinner" style="font-size:14px; color:#64748b" title="Syncing..."></i>
               <i v-else-if="syncStatus === 'synced'" class="pi pi-cloud" style="font-size:14px; color:#22c55e" title="Synced to Drive"></i>
