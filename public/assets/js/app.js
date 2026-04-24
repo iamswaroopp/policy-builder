@@ -380,8 +380,7 @@ const App = {
               <i v-if="syncStatus === 'syncing'" class="pi pi-spin pi-spinner" style="font-size:14px; color:#64748b" title="Syncing..."></i>
               <i v-else-if="syncStatus === 'synced'" class="pi pi-cloud" style="font-size:14px; color:#22c55e" title="Synced to Drive"></i>
               <i v-else-if="syncStatus === 'error'" class="pi pi-exclamation-triangle" style="font-size:14px; color:#ef4444" title="Sync error"></i>
-              <img v-if="userProfile?.picture" :src="userProfile.picture" class="auth-avatar" :title="userProfile.email || userProfile.name" referrerpolicy="no-referrer" @error="$event.target.style.display='none'" />
-              <span v-if="!userProfile?.picture" class="auth-avatar-fallback" :title="userProfile?.email || userProfile?.name">{{ (userProfile?.name || '?')[0] }}</span>
+              <p-avatar :image="userProfile?.picture" :label="userProfile?.picture ? undefined : (userProfile?.name || '?')[0]" shape="circle" :title="userProfile?.email || userProfile?.name" style="width:28px; height:28px; font-size:13px" />
               <p-button icon="pi pi-sign-out" severity="secondary" size="small" text @click="handleSignOut" title="Sign out" />
             </div>
           </div>
@@ -1099,5 +1098,6 @@ app.component('p-toast', PrimeVue.Toast);
 app.component('p-divider', PrimeVue.Divider);
 app.component('p-selectbutton', PrimeVue.SelectButton);
 app.component('p-splitbutton', PrimeVue.SplitButton);
+app.component('p-avatar', PrimeVue.Avatar);
 
 app.mount('#app');
