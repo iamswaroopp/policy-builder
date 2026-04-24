@@ -3,7 +3,7 @@
  * No backend required. Client ID is safe to expose (origin-restricted).
  */
 window.GoogleAuth = (() => {
-  const CLIENT_ID = '292aborb06-PLACEHOLDER.apps.googleusercontent.com';
+  const CLIENT_ID = '408005498550-lbkpehtnh2it40q03m2b25ak72qtifvd.apps.googleusercontent.com';
   const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
 
   let tokenClient = null;
