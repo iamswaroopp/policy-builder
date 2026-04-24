@@ -286,7 +286,7 @@ window.PdfGenerator = (() => {
           { text: 'Updated By', bold: true, fillColor: '#f5f5f5', color: styles.body.color, margin: [6, 6, 6, 6] },
         ],
       ];
-      for (const v of versions) {
+      for (const v of [...versions].reverse()) {
         vhBody.push([
           { text: v.version || '', color: styles.body.color, margin: [6, 6, 6, 6] },
           { text: v.date || '', color: styles.body.color, margin: [6, 6, 6, 6] },

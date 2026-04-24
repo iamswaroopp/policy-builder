@@ -441,7 +441,7 @@ const App = {
                 <span class="sidebar-label" style="margin-bottom:0">Version History</span>
                 <p-button icon="pi pi-plus" label="Add" severity="success" size="small" outlined @click="addVersion" />
               </div>
-              <div v-if="versions.length > 0">
+              <div v-if="versions.length > 0" style="max-height:200px; overflow-y:auto" class="scrollbar-thin">
                 <table style="width:100%; border-collapse:collapse; font-size:13px">
                   <thead>
                     <tr style="border-bottom:1px solid var(--p-surface-200)">
@@ -452,24 +452,24 @@ const App = {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(v, i) in versions" :key="i" style="border-bottom:1px solid var(--p-surface-100)">
+                    <tr v-for="(v, i) in reversedVersions" :key="v._origIndex" style="border-bottom:1px solid var(--p-surface-100)">
                       <td style="padding:4px 8px">
-                        <input v-model="v.version" @input="emitVersions" placeholder="1.0"
+                        <input :value="v.version" @input="e => { versions[v._origIndex].version = e.target.value; emitVersions() }" placeholder="1.0"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px 8px">
-                        <input v-model="v.date" @input="emitVersions" placeholder="YYYY-MM-DD" type="date"
+                        <input :value="v.date" @input="e => { versions[v._origIndex].date = e.target.value; emitVersions() }" placeholder="YYYY-MM-DD" type="date"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px 8px">
-                        <input v-model="v.updatedBy" @input="emitVersions" placeholder="Name"
+                        <input :value="v.updatedBy" @input="e => { versions[v._origIndex].updatedBy = e.target.value; emitVersions() }" placeholder="Name"
                           style="border:none; border-bottom:1px solid transparent; padding:4px 0; width:100%; font-size:13px; background:transparent; outline:none"
                         >
                       </td>
                       <td style="padding:4px; text-align:center">
-                        <p-button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeVersion(i)" />
+                        <p-button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeVersion(v._origIndex)" />
                       </td>
                     </tr>
                   </tbody>
@@ -558,7 +558,11 @@ const App = {
         id: d.id,
         title: d.title || 'Untitled',
         lastModified: d.lastModified || '',
-      })).sort((a, b) => a.title.localeCompare(b.title))
+      })).sort((a, b) => (b.lastModified || '').localeCompare(a.lastModified || ''))
+    );
+
+    const reversedVersions = computed(() =>
+      versions.value.map((v, i) => ({ ...v, _origIndex: i })).reverse()
     );
 
     const logoPreviewHtml = computed(() => {
@@ -580,6 +584,8 @@ const App = {
         createDocument();
       }
     });
+
+    const isLoadingDoc = ref(false);
 
     const autoSave = debounce(() => {
       if (!currentDocId.value) return;
@@ -610,6 +616,12 @@ const App = {
 
     watch([title, logo, versions, pdfStyles, markdownBody, pageSize], autoSave, { deep: true });
 
+    // Auto-add version only on content edits (title/body), not metadata changes
+    watch([title, markdownBody], () => {
+      if (!currentDocId.value || isLoadingDoc.value) return;
+      autoAddVersionIfNeeded();
+    });
+
     function loadDocumentState(mdString) {
       const parsed = MdParser.parse(mdString);
       title.value = parsed.title;
@@ -624,8 +636,28 @@ const App = {
 
     function selectDocument(id) {
       currentDocId.value = id;
+      isLoadingDoc.value = true;
       const md = loadDocument(id);
       loadDocumentState(md);
+      nextTick(() => { isLoadingDoc.value = false; });
+    }
+
+    function autoAddVersionIfNeeded() {
+      const today = new Date().toISOString().split('T')[0];
+      const last = versions.value.length > 0 ? versions.value[versions.value.length - 1] : null;
+      if (!last || last.date !== today) {
+        let nextVersion = '1.0';
+        if (last && last.version) {
+          const match = last.version.trim().match(/(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1]) + 1;
+            nextVersion = last.version.trim().slice(0, match.index) + num;
+          } else {
+            nextVersion = last.version.trim() + '.1';
+          }
+        }
+        versions.value.push({ version: nextVersion, date: today, updatedBy: last ? last.updatedBy : '' });
+      }
     }
 
     function createDocument() {
@@ -797,7 +829,8 @@ const App = {
           }
         }
       }
-      versions.value.push({ version: nextVersion, date: today, updatedBy: '' });
+      const lastUpdatedBy = versions.value.length > 0 ? (versions.value[versions.value.length - 1].updatedBy || '') : '';
+      versions.value.push({ version: nextVersion, date: today, updatedBy: lastUpdatedBy });
     }
 
     function removeVersion(index) {
@@ -873,7 +906,7 @@ const App = {
       mode, title, logo, logoSvg, logoPreviewHtml, versions, pdfStyles, markdownBody,
       pageSize, created, updated, currentDocId, documents, fileInput, logoInput,
       guideVisible, guideHtml,
-      modeOptions, pageSizeOptions, docOptions, downloadMenuItems,
+      modeOptions, pageSizeOptions, docOptions, reversedVersions, downloadMenuItems,
       formatTimestamp,
       selectDocument, createDocument, confirmDeleteDoc, deleteDocument,
       triggerUpload, triggerLogoUpload, onFileUpload, onLogoUpload,

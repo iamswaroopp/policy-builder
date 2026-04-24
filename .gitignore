@@ -2,3 +2,5 @@ docs/superpowers
 docs/superpowers/*
 
 .playwright-mcp/*
+
+policies/
