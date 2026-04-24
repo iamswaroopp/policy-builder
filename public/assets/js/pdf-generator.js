@@ -375,7 +375,7 @@ window.PdfGenerator = (() => {
         h3: { fontSize: parseInt(styles.h3.size, 10), bold: true, color: styles.h3.color, margin: [0, 16, 0, 6] },
         h4: { fontSize: parseInt(styles.h4.size, 10), bold: true, color: styles.h4.color, margin: [0, 14, 0, 4] },
         h5: { fontSize: parseInt(styles.h5.size, 10), bold: true, color: styles.h5.color, margin: [0, 12, 0, 4] },
-        body: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3], alignment: 'justify' },
+        body: { fontSize: parseInt(styles.body.size, 10), color: styles.body.color, lineHeight: 1.6, margin: [0, 3, 0, 3] },
       },
 
       defaultStyle: {
@@ -383,6 +383,7 @@ window.PdfGenerator = (() => {
         fontSize: parseInt(styles.body.size, 10) || 12,
         color: styles.body.color || '#333333',
         lineHeight: 1.5,
+        alignment: 'justify',
       },
     };
   }
